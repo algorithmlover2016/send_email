@@ -1,6 +1,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const nodemailer = require('nodemailer');
+const dotenv = require('dotenv');
+
+// Load environment variables from .env file
+dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -13,8 +17,8 @@ app.use(express.static('public')); // Serve static files from public directory
 let transporter = nodemailer.createTransport({
     service: 'gmail', // Use your email service
     auth: {
-        user: 'youremail@gmail.com', // Your email
-        pass: 'yourpassword' // Your email password or app-specific password
+        user: process.env.EMAIL_USER, // Load user from .env file
+        pass: process.env.EMAIL_PASS  // Load pass from .env file
     }
 });
 
@@ -26,7 +30,7 @@ app.post('/submit-email', (req, res) => {
     }
     
     let mailOptions = {
-        from: 'youremail@gmail.com',
+        from: process.env.EMAIL_USER,
         to: email,
         subject: 'Hello!',
         text: `Hello, ${email}!`
