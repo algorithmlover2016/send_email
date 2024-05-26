@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_mail import Mail, Message
+import smtplib, ssl
 import os
 from dotenv import load_dotenv
 
@@ -7,14 +7,11 @@ load_dotenv()  # Load environment variables from .env file
 
 app = Flask(__name__)
 
-# Configuration
-app.config['MAIL_SERVER'] = 'smtp.gmail.com'
-app.config['MAIL_PORT'] = 587
-app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = os.getenv('MAIL_USERNAME')  # Your email from environment
-app.config['MAIL_PASSWORD'] = os.getenv('MAIL_PASSWORD')  # Your email password or app-specific password from environment
-
-mail = Mail(app)
+# Load email configurations
+SMTP_SERVER = os.getenv('SMTP_SERVER', 'smtp.gmail.com')
+SMTP_PORT = os.getenv('SMTP_PORT', 587)
+SENDER_EMAIL = os.getenv('SENDER_EMAIL')
+SENDER_PASSWORD = os.getenv('SENDER_PASSWORD')
 
 @app.route('/')
 def index():
@@ -27,12 +24,24 @@ def submit_email():
     
     if not email:
         return jsonify({'error': 'Email is required'}), 400
+
+    message = f"""\
+Subject: Hello
+
+Hello, {email}!
+    The message is auto sent by pyhton program!
+"""
+
+    context = ssl.create_default_context()
     
     try:
-        msg = Message('Hello!', sender=os.getenv('MAIL_USERNAME'), recipients=[email])
-        msg.body = f"Hello, {email}!"
-        mail.send(msg)
-        return jsonify({'message': 'Email sent successfully!'}), 200
+        with smtplib.SMTP(SMTP_SERVER, SMTP_PORT) as server:
+            server.ehlo()  # Can be omitted
+            server.starttls(context=context)
+            server.ehlo()  # Can be omitted
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.sendmail(SENDER_EMAIL, email, message)
+        return jsonify({'message': f'Email {email} sent successfully!'}), 200
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
