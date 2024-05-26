@@ -29,7 +29,7 @@ def submit_email():
 Subject: Hello
 
 Hello, {email}!
-    The message is auto sent by pyhton program!
+    The message is auto sent by python program!
 """
 
     context = ssl.create_default_context()
